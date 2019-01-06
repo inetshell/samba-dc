@@ -18,7 +18,7 @@ if [ ! -f /var/lib/samba/registry.tdb ]; then
   if [ $DOMAIN_ACTION == provision ]; then
     PROVISION_OPTS="--server-role=dc --use-rfc2307 --domain=$WORKGROUP \
     --realm=$REALM --adminpass=$ADMIN_PASSWORD"
-  if [ $DOMAIN_ACTION == join ]; then
+  elif [ $DOMAIN_ACTION == join ]; then
     PROVISION_OPTS="$REALM DC -UAdministrator --password=$ADMIN_PASSWORD"
   else
     echo 'Only provision and join actions are supported.'
