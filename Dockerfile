@@ -53,7 +53,7 @@ RUN apk add --update --no-cache krb5 ldb-tools samba-dc=$SAMBA_VERSION tdb \
     for TARGET in lib bin/delv bin/dig bin/dnssec bin/nsupdate; do \
       make -C $TARGET install; \
     done && \
-    apk del .fetch-deps && rm -r /var/cache/apk/* /tmp/* \
+    apk del .fetch-deps && rm -r /var/cache/apk/* /tmp/* && \
 
 # Set permissions to entrypoint.sh
     chmod 0755 /usr/local/bin/entrypoint.sh
