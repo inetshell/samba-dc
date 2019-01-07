@@ -26,6 +26,8 @@ if [ ! -f /var/lib/samba/registry.tdb ]; then
   fi
 
   rm -f /etc/samba/smb.conf /etc/krb5.conf
+
+  # This step is required for INTERFACE_OPTS to work as expected
   echo "samba-tool domain $DOMAIN_ACTION $PROVISION_OPTS $INTERFACE_OPTS \
      --dns-backend=SAMBA_INTERNAL" | sh
 

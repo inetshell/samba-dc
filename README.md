@@ -19,8 +19,8 @@ The most-common directives can be specified in environment variables as shown be
 Test your configuration and/or manage contents of your directory using Apache Directory Studio. Make a connection on port 636 with method SSL encryption (ldaps); specify simple authentication with username <realm prefix>\<your name>. The ldaps certificate is self-signed so you'll need to accept it first.
 
 ### Status
-* This is tested as a spare domain controller against Active Directory running on Windows Server 2008, and against other samba4 domain controllers
-* The "provision" command works
+* The "join" command is tested as a spare domain controller against Active Directory running on Windows Server 2008, and against other samba4 domain controllers.
+* The "provision" is tested as a Samba4 domain controller with a Windows 7 client.
 * The "BIND_INTERFACES_ONLY" option is working now.
 
 ### Variables
@@ -43,6 +43,7 @@ WORKGROUP | WORKGROUP | NT workgroup
 
 ### Secrets
 This is only needed at first run, for samba domain provision or join. Do NOT leave your domain-controller administrator secret activated at any other time.
+For clarity, this is a docker-secret with the initial Samba admin password, not the password itself.
 
 Secret | Description
 ------ | -----------
