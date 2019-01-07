@@ -17,17 +17,17 @@ if [ ! -f /var/lib/samba/registry.tdb ]; then
   fi
   if [ $DOMAIN_ACTION == provision ]; then
     PROVISION_OPTS="--server-role=dc --use-rfc2307 --domain=$WORKGROUP \
-    --realm=$REALM --adminpass=$ADMIN_PASSWORD"
+    --realm=$REALM --adminpass='$ADMIN_PASSWORD'"
   elif [ $DOMAIN_ACTION == join ]; then
-    PROVISION_OPTS="$REALM DC -UAdministrator --password=$ADMIN_PASSWORD"
+    PROVISION_OPTS="$REALM DC -UAdministrator --password='$ADMIN_PASSWORD'"
   else
     echo 'Only provision and join actions are supported.'
     exit 1
   fi
 
   rm -f /etc/samba/smb.conf /etc/krb5.conf
-  samba-tool domain $DOMAIN_ACTION $PROVISION_OPTS $INTERFACE_OPTS \
-     --dns-backend=SAMBA_INTERNAL </dev/null
+  echo "samba-tool domain $DOMAIN_ACTION $PROVISION_OPTS $INTERFACE_OPTS \
+     --dns-backend=SAMBA_INTERNAL" | sh
 
   mv /etc/samba/smb.conf /etc/samba/smb.conf.bak
   echo 'root = administrator' > /etc/samba/smbusers
