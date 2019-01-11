@@ -1,12 +1,12 @@
-FROM alpine:3.8
-MAINTAINER Rich Braun "docker@instantlinux.net"
+FROM centos:7.6.1810
+MAINTAINER Juan Manuel Carrillo Moreno <inetshell@gmail.com>
 ARG BUILD_DATE
 ARG VCS_REF
 LABEL org.label-schema.build-date=$BUILD_DATE \
     org.label-schema.license=GPL-3.0 \
     org.label-schema.name=samba-dc \
     org.label-schema.vcs-ref=$VCS_REF \
-    org.label-schema.vcs-url=https://github.com/instantlinux/docker-tools
+    org.label-schema.vcs-url=https://github.com/inetshell/samba-dc
 
 ENV ADMIN_PASSWORD_SECRET=samba-admin-password \
     ALLOW_DNS_UPDATES=secure \
@@ -25,40 +25,70 @@ ENV ADMIN_PASSWORD_SECRET=samba-admin-password \
 
 ARG BIND9_VER=9.13.2
 ARG BIND9_SHA=6c044e9ea81add9dbbd2f5dfc224964cc6b6e364e43a8d6d8b574d9282651802
-ARG SAMBA_VERSION=4.8.8-r0
+ARG SAMBA_VERSION=4.9.4
 
 COPY *.conf.j2 /root/
 COPY entrypoint.sh /usr/local/bin/
 
-RUN apk add --update --no-cache krb5 ldb-tools samba-dc=$SAMBA_VERSION tdb \
-      libxml2 libcrypto1.0 && \
+RUN \
+  yum install -y epel-release && \
+  yum install -y attr bind-utils docbook-style-xsl gcc gdb krb5-workstation \
+       libsemanage-python libxslt perl perl-ExtUtils-MakeMaker \
+       perl-Parse-Yapp perl-Test-Base pkgconfig policycoreutils-python \
+       python2-crypto gnutls-devel libattr-devel keyutils-libs-devel \
+       libacl-devel libaio-devel libblkid-devel libxml2-devel openldap-devel \
+       pam-devel popt-devel python-devel readline-devel zlib-devel systemd-devel \
+       lmdb-devel jansson-devel gpgme-devel pygpgme libarchive-devel lmdb-devel && \
+  cd /tmp && \
+  curl -O https://download.samba.org/pub/samba/stable/samba-4.9.4.tar.gz && \
+  tar xvzf samba-4.9.4.tar.gz
+
+RUN \
+  cd /tmp/samba-4.9.4/ && \
+  ./configure \
+  --sbindir=/usr/sbin \
+  --bindir=/usr/bin \
+  --with-logfilebase=/var/log/samba \
+  --libdir=/usr/lib64 \
+  --with-modulesdir=/usr/lib64/samba \
+  --with-lockdir=/var/lib/samba/lock \
+  --with-statedir=/var/lib/samba \
+  --with-cachedir=/var/lib/samba \
+  --with-piddir=/run \
+  --with-smbpasswd-file=/var/lib/samba/private/smbpasswd \
+  --with-privatedir=/var/lib/samba/private \
+  --with-bind-dns-dir=/var/lib/samba/bind-dns \
+  --enable-gnutls \
+  --enable-selftest
+
 
 # The bind-tools package on Alpine omits gssapi, so build it here.
 # Refer to compile options at:
 #  https://git.alpinelinux.org/cgit/aports/tree/main/bind/APKBUILD
 
-    apk add --virtual .fetch-deps curl file gcc krb5-dev libcap-dev \
-      libgss-dev libxml2-dev linux-headers make musl-dev openssl-dev perl && \
-    cd /tmp && \
-    curl -Lo bind.tar.gz \
+RUN \
+  yum install -y krb5-devel openssl-devel libcap-devel && \
+  cd /tmp && \
+  curl -Lo bind.tar.gz \
       ftp://ftp.isc.org/isc/bind9/$BIND9_VER/bind-$BIND9_VER.tar.gz && \
-    echo "$BIND9_SHA  bind.tar.gz" > checksums && \
-    sha256sum -c checksums && \
-    tar xf bind.tar.gz --strip-components=1 && \
-    CFLAGS=-O2 ./configure --with-gssapi=/usr/include/gssapi --with-dlopen=yes \
+  echo "$BIND9_SHA  bind.tar.gz" > checksums && \
+  sha256sum -c checksums && \
+  tar xvzf bind.tar.gz --strip-components=1 && \
+  cd bind-9.13.2/ && \
+  export CFLAGS=-O2 && \
+  ./configure --with-gssapi=/usr/include/gssapi --with-dlopen=yes \
       --prefix=/usr --sysconfdir=/etc/bind --localstatedir=/var \
       --with-openssl=/usr --enable-linux-caps --with-libxml2 --enable-threads \
       --enable-filter-aaaa --enable-ipv6 --enable-shared --with-libtool && \
     make && \
-    for TARGET in lib bin/delv bin/dig bin/dnssec bin/nsupdate; do \
-      make -C $TARGET install; \
-    done && \
-    apk del .fetch-deps && rm -r /var/cache/apk/* /tmp/* && \
+  for TARGET in lib bin/delv bin/dig bin/dnssec bin/nsupdate; do \
+    make -C $TARGET install; \
+  done
 
 # Set permissions to entrypoint.sh
-    chmod 0755 /usr/local/bin/entrypoint.sh
+#    chmod 0755 /usr/local/bin/entrypoint.sh
 
-VOLUME /etc/samba /var/lib/samba
-EXPOSE 53 53/udp 88 88/udp 135 137-138/udp 139 389 445 464 464/udp 636 3268-3269 49152-65535
+#VOLUME /etc/samba /var/lib/samba
+#EXPOSE 53 53/udp 88 88/udp 135 137-138/udp 139 389 445 464 464/udp 636 3268-3269 49152-65535
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+#ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
