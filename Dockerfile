@@ -31,6 +31,7 @@ COPY *.conf.j2 /root/
 COPY entrypoint.sh /usr/local/bin/
 
 RUN \
+  # Install Samba dependencies
   yum install -y epel-release && \
   yum install -y attr bind-utils docbook-style-xsl gcc gdb krb5-workstation \
        libsemanage-python libxslt perl perl-ExtUtils-MakeMaker \
@@ -40,11 +41,11 @@ RUN \
        pam-devel popt-devel python-devel readline-devel zlib-devel systemd-devel \
        lmdb-devel jansson-devel gpgme-devel pygpgme libarchive-devel lmdb-devel && \
   cd /tmp && \
-  curl -O https://download.samba.org/pub/samba/stable/samba-4.9.4.tar.gz && \
-  tar xvzf samba-4.9.4.tar.gz
 
-RUN \
-  cd /tmp/samba-4.9.4/ && \
+  # Build Samba
+  curl -O https://download.samba.org/pub/samba/stable/samba-${SAMBA_VERSION}.tar.gz && \
+  tar xvzf samba-${SAMBA_VERSION}.tar.gz && \
+  cd /tmp/samba-${SAMBA_VERSION}/ && \
   ./configure \
   --sbindir=/usr/sbin \
   --bindir=/usr/bin \
@@ -58,23 +59,18 @@ RUN \
   --with-smbpasswd-file=/var/lib/samba/private/smbpasswd \
   --with-privatedir=/var/lib/samba/private \
   --with-bind-dns-dir=/var/lib/samba/bind-dns \
-  --enable-gnutls \
-  --enable-selftest
+  --enable-gnutls && \
+  make && \
+  make install && \
 
-
-# The bind-tools package on Alpine omits gssapi, so build it here.
-# Refer to compile options at:
-#  https://git.alpinelinux.org/cgit/aports/tree/main/bind/APKBUILD
-
-RUN \
+  #Install BIND dependencies
   yum install -y krb5-devel openssl-devel libcap-devel && \
   cd /tmp && \
-  curl -Lo bind.tar.gz \
-      ftp://ftp.isc.org/isc/bind9/$BIND9_VER/bind-$BIND9_VER.tar.gz && \
-  echo "$BIND9_SHA  bind.tar.gz" > checksums && \
+  curl -O ftp://ftp.isc.org/isc/bind9/$BIND9_VER/bind-$BIND9_VER.tar.gz && \
+  tar xvzf bind-$BIND9_VER.tar.gz && \
+  echo "$BIND9_SHA  bind-$BIND9_VER.tar.gz" > checksums && \
   sha256sum -c checksums && \
-  tar xvzf bind.tar.gz --strip-components=1 && \
-  cd bind-9.13.2/ && \
+  cd /tmp/bind-$BIND9_VER/ && \
   export CFLAGS=-O2 && \
   ./configure --with-gssapi=/usr/include/gssapi --with-dlopen=yes \
       --prefix=/usr --sysconfdir=/etc/bind --localstatedir=/var \
@@ -83,12 +79,17 @@ RUN \
     make && \
   for TARGET in lib bin/delv bin/dig bin/dnssec bin/nsupdate; do \
     make -C $TARGET install; \
-  done
+  done && \
 
-# Set permissions to entrypoint.sh
-#    chmod 0755 /usr/local/bin/entrypoint.sh
+  # Remove temporal files
+  yum remove -y *-devel* && \
+  cd /tmp && \
+  rm -rf /tmp/* && \
 
-#VOLUME /etc/samba /var/lib/samba
-#EXPOSE 53 53/udp 88 88/udp 135 137-138/udp 139 389 445 464 464/udp 636 3268-3269 49152-65535
+  # Set permissions to entrypoint.sh
+  chmod 0755 /usr/local/bin/entrypoint.sh
 
-#ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+VOLUME /etc/samba /var/lib/samba
+EXPOSE 53 53/udp 88 88/udp 135 137-138/udp 139 389 445 464 464/udp 636 3268-3269 49152-65535
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

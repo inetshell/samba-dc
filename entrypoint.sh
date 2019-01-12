@@ -5,8 +5,8 @@ NETBIOS_NAME=$(hostname -s | tr [a-z] [A-Z])
 
 if [ ! -f /etc/timezone ] && [ ! -z "$TZ" ]; then
   echo 'Set timezone'
-  apk add --update tzdata
-  cp /usr/share/zoneinfo/$TZ /etc/localtime
+  yum install -y tzdata
+  cp -n /usr/share/zoneinfo/$TZ /etc/localtime
   echo $TZ >/etc/timezone
 fi
 
