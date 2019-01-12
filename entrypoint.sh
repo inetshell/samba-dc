@@ -3,13 +3,6 @@
 ADMIN_PASSWORD=$(cat /run/secrets/$ADMIN_PASSWORD_SECRET)
 NETBIOS_NAME=$(hostname -s | tr [a-z] [A-Z])
 
-if [ ! -f /etc/timezone ] && [ ! -z "$TZ" ]; then
-  echo 'Set timezone'
-  yum install -y tzdata
-  cp -n /usr/share/zoneinfo/$TZ /etc/localtime
-  echo $TZ >/etc/timezone
-fi
-
 if [ ! -f /var/lib/samba/registry.tdb ]; then
   if [ "$BIND_INTERFACES_ONLY" == yes ]; then
     INTERFACE_OPTS="--option=\"bind interfaces only=yes\" \

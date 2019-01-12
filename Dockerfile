@@ -19,7 +19,6 @@ ENV ADMIN_PASSWORD_SECRET=samba-admin-password \
     MODEL=standard \
     REALM=ad.example.com \
     SERVER_STRING="Samba Domain Controller" \
-    TZ=UTC \
     WINBIND_USE_DEFAULT_DOMAIN=yes \
     WORKGROUP=WORKGROUP
 
@@ -31,6 +30,8 @@ COPY *.conf.j2 /root/
 COPY entrypoint.sh /usr/local/bin/
 
 RUN \
+  # Install system updates
+  yum update -y
   # Install Samba dependencies
   yum install -y epel-release && \
   yum install -y attr bind-utils docbook-style-xsl gcc gdb krb5-workstation \

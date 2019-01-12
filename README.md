@@ -1,6 +1,4 @@
 ## samba-dc
-[![](https://images.microbadger.com/badges/version/instantlinux/samba-dc.svg)](https://microbadger.com/images/instantlinux/samba-dc "Version badge") [![](https://images.microbadger.com/badges/image/instantlinux/samba-dc.svg)](https://microbadger.com/images/instantlinux/samba-dc "Image badge") [![](https://images.microbadger.com/badges/commit/instantlinux/samba-dc.svg)](https://microbadger.com/images/instantlinux/samba-dc "Commit badge")
-
 Samba domain controller.
 
 ### Usage
@@ -37,7 +35,6 @@ LOG_LEVEL | 1 | log verbosity
 MODEL | standard | process model: single, standard, thread
 REALM | ad.example.com | active-directory DNS realm
 SERVER_STRING | Samba Domain Controller | server identity
-TZ | UTC | local timezone
 WINBIND_USE_DEFAULT_DOMAIN | yes | allow username without domain component
 WORKGROUP | WORKGROUP | NT workgroup
 
