@@ -31,7 +31,7 @@ COPY entrypoint.sh /usr/local/bin/
 
 RUN \
   # Install system updates
-  yum update -y
+  yum update -y && \
   # Install Samba dependencies
   yum install -y epel-release && \
   yum install -y attr bind-utils docbook-style-xsl gcc gdb krb5-workstation \
