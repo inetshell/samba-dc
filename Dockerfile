@@ -26,9 +26,6 @@ ARG BIND9_VER=9.13.2
 ARG BIND9_SHA=6c044e9ea81add9dbbd2f5dfc224964cc6b6e364e43a8d6d8b574d9282651802
 ARG SAMBA_VERSION=4.9.4
 
-COPY *.conf.j2 /root/
-COPY entrypoint.sh /usr/local/bin/
-
 RUN \
   # Install system updates
   yum update -y && \
@@ -64,6 +61,10 @@ RUN \
   make && \
   make install && \
 
+  # Fix Samba directories
+  rm -rf /usr/local/samba/etc/ && \
+  ln -s /etc/samba /usr/local/samba/etc && \
+
   #Install BIND dependencies
   yum install -y krb5-devel openssl-devel libcap-devel && \
   cd /tmp && \
@@ -82,13 +83,24 @@ RUN \
     make -C $TARGET install; \
   done && \
 
-  # Remove temporal files
+  # Link required nsupdate libraries
+  ln -sf /usr/lib/libdns.so /usr/lib64/libdns.so && \
+  ln -sf /usr/lib/libdns.so.1302 /usr/lib64/libdns.so.1302 && \
+  ln -sf /usr/lib/libirs.so.1300 /usr/lib64/libirs.so.1300 && \
+  ln -sf /usr/lib/libbind9.so.1300 /usr/lib64/libbind9.so.1300 && \
+  ln -sf /usr/lib/libisccfg.so.1300 /usr/lib64/libisccfg.so.1300 && \
+  ln -sf /usr/lib/libisc.so.1301 /usr/lib64/libisc.so.1301 && \
+
+  # Remove temp files
   yum remove -y *-devel* && \
   cd /tmp && \
-  rm -rf /tmp/* && \
+  rm -rf /tmp/*
 
-  # Set permissions to entrypoint.sh
-  chmod 0755 /usr/local/bin/entrypoint.sh
+COPY *.conf.j2 /root/
+COPY entrypoint.sh /usr/local/bin/
+
+# Set permissions to entrypoint.sh
+RUN chmod 0755 /usr/local/bin/entrypoint.sh
 
 VOLUME /etc/samba /var/lib/samba
 EXPOSE 53 53/udp 88 88/udp 135 137-138/udp 139 389 445 464 464/udp 636 3268-3269 49152-65535
