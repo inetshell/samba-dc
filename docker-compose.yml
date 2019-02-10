@@ -5,6 +5,9 @@ services:
     image: inetshell/samba-dc:centos7-4.9.4
     restart: always
     network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
     hostname: ${SAMBADC_HOSTNAME:-dc.example.com}
     environment:
       DOMAIN_ACTION: provision
@@ -12,31 +15,28 @@ services:
       REALM: ${SAMBA_REALM:-ad.example.com}
       WORKGROUP: ${SAMBA_WORKGROUP:-WORKGROUP}
     volumes:
-      - etc:/etc/samba
-      - lib:/var/lib/samba
+      - ./dc/samba_etc:/etc/samba
+      - ./dc/samba_lib:/var/lib/samba
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - 53:53
+      - 53:53/tcp
       - 53:53/udp
-      - 88:88
+      - 88:88/tcp
       - 88:88/udp
-      - 135:135
+      - 135:135/tcp
       - 137-138:137-138/udp
-      - 139:139
-      - 389:389
+      - 139:139/tcp
+      - 389:389/tcp
       - 389:389/udp
-      - 445:445
-      - 464:464
+      - 445:445/tcp
+      - 464:464/tcp
       - 464:464/udp
-      - 636:636
-      - 3268-3269:3268-3269
-      - 49152-65535
+      - 636:636/tcp
+      - 3268-3269:3268-3269/tcp
+      - 49152-65535:49152-65535/tcp
     secrets:
       - samba-admin-password
 
-volumes:
-  etc:
-  lib:
 secrets:
   samba-admin-password:
     file: ./secrets/samba-admin-password
