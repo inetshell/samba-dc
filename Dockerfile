@@ -45,26 +45,25 @@ RUN \
   tar xvzf samba-${SAMBA_VERSION}.tar.gz && \
   cd /tmp/samba-${SAMBA_VERSION}/ && \
   ./configure \
-  --bindir=/usr/bin \
-  --sbindir=/usr/sbin \
-  --sysconfdir=/etc \
-  --with-logfilebase=/var/log/samba \
-  --libdir=/usr/lib64 \
-  --with-modulesdir=/usr/lib64/samba \
-  --with-lockdir=/var/run/samba \
-  --with-statedir=/var/lib/samba \
-  --with-cachedir=/var/cache/samba \
-  --with-piddir=/var/run/samba \
-  --with-smbpasswd-file=/var/lib/samba/private/smbpasswd \
-  --with-privatedir=/var/lib/samba/private \
-  --with-bind-dns-dir=/var/lib/samba/bind-dns \
-  --enable-gnutls && \
+    --enable-fhs \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --with-piddir=/run/samba \
+    --with-pammodulesdir=/lib/security \
+    --with-logfilebase=/var/log/samba \
+    --libdir=/usr/lib64 \
+    --with-modulesdir=/usr/lib64/samba \
+    --with-lockdir=/var/run/samba \
+    --with-statedir=/var/lib/samba \
+    --with-cachedir=/var/cache/samba \
+    --with-piddir=/var/run/samba \
+    --with-smbpasswd-file=/var/lib/samba/private/smbpasswd \
+    --with-privatedir=/var/lib/samba/private \
+    --with-bind-dns-dir=/var/lib/samba/bind-dns \
+    --enable-gnutls && \
   make && \
   make install && \
-
-  # Fix Samba directories
-  #rm -rf /usr/local/samba/etc/ && \
-  #ln -s /etc/samba /usr/local/samba/etc && \
 
   #Install BIND dependencies
   yum install -y krb5-devel openssl-devel libcap-devel && \
@@ -75,22 +74,25 @@ RUN \
   sha256sum -c checksums && \
   cd /tmp/bind-$BIND9_VER/ && \
   export CFLAGS=-O2 && \
-  ./configure --with-gssapi=/usr/include/gssapi --with-dlopen=yes \
-      --prefix=/usr --sysconfdir=/etc/bind --localstatedir=/var \
-      --with-openssl=/usr --enable-linux-caps --with-libxml2 --enable-threads \
-      --enable-filter-aaaa --enable-ipv6 --enable-shared --with-libtool && \
-    make && \
+  ./configure \
+    --prefix=/usr \
+    --exec-prefix=/usr \
+    --libdir=/usr/lib64 \
+    --with-gssapi=/usr/include/gssapi \
+    --with-dlopen=yes \
+    --sysconfdir=/etc/bind \
+    --localstatedir=/var \
+    --with-openssl=/usr \
+    --enable-linux-caps \
+    --with-libxml2 \
+    --enable-threads \
+    --enable-ipv6 \
+    --enable-shared \
+    --with-libtool && \
+  make && \
   for TARGET in lib bin/delv bin/dig bin/dnssec bin/nsupdate; do \
     make -C $TARGET install; \
   done && \
-
-  # Link required nsupdate libraries
-  ln -sf /usr/lib/libdns.so /usr/lib64/libdns.so && \
-  ln -sf /usr/lib/libdns.so.1302 /usr/lib64/libdns.so.1302 && \
-  ln -sf /usr/lib/libirs.so.1300 /usr/lib64/libirs.so.1300 && \
-  ln -sf /usr/lib/libbind9.so.1300 /usr/lib64/libbind9.so.1300 && \
-  ln -sf /usr/lib/libisccfg.so.1300 /usr/lib64/libisccfg.so.1300 && \
-  ln -sf /usr/lib/libisc.so.1301 /usr/lib64/libisc.so.1301 && \
 
   # Remove temp files
   yum remove -y *-devel* && \
