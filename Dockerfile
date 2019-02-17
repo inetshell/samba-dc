@@ -45,15 +45,16 @@ RUN \
   tar xvzf samba-${SAMBA_VERSION}.tar.gz && \
   cd /tmp/samba-${SAMBA_VERSION}/ && \
   ./configure \
-  --sbindir=/usr/sbin \
   --bindir=/usr/bin \
+  --sbindir=/usr/sbin \
+  --sysconfdir=/etc \
   --with-logfilebase=/var/log/samba \
   --libdir=/usr/lib64 \
   --with-modulesdir=/usr/lib64/samba \
-  --with-lockdir=/var/lib/samba/lock \
+  --with-lockdir=/var/run/samba \
   --with-statedir=/var/lib/samba \
-  --with-cachedir=/var/lib/samba \
-  --with-piddir=/run \
+  --with-cachedir=/var/cache/samba \
+  --with-piddir=/var/run/samba \
   --with-smbpasswd-file=/var/lib/samba/private/smbpasswd \
   --with-privatedir=/var/lib/samba/private \
   --with-bind-dns-dir=/var/lib/samba/bind-dns \
@@ -62,8 +63,8 @@ RUN \
   make install && \
 
   # Fix Samba directories
-  rm -rf /usr/local/samba/etc/ && \
-  ln -s /etc/samba /usr/local/samba/etc && \
+  #rm -rf /usr/local/samba/etc/ && \
+  #ln -s /etc/samba /usr/local/samba/etc && \
 
   #Install BIND dependencies
   yum install -y krb5-devel openssl-devel libcap-devel && \
